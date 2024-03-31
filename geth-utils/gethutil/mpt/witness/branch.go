@@ -31,9 +31,12 @@ func isTxLeaf(proofEl []byte) bool {
 	check(err)
 	c, err1 := rlp.CountValues(elems)
 	check(err1)
-	fmt.Println("ISLEAF:", c)
+	isHashedNode := false
+	if proofEl[0] == 226 && proofEl[1] == 32 && proofEl[2] == 160 {
+		isHashedNode = true
+	}
 	// 9: for tx (Nonce, Gas, GasPrice, Value, To, Data, r, s, v)
-	return c == 9
+	return c == 9 || isHashedNode
 }
 
 // prepareBranchWitness takes the rows that are to be filled with branch data and it takes
@@ -84,8 +87,11 @@ func prepareBranchWitness(rows [][]byte, branch []byte, branchStart int, branchR
 	}
 }
 
-func prepareBranchNode(branch1, branch2, extNode1, extNode2, extListRlpBytes []byte, extValues [][]byte, key, driftedInd byte,
+func prepareBranchNode(
+	branch1, branch2, extNode1, extNode2, extListRlpBytes []byte,
+	extValues [][]byte, key, driftedInd byte,
 	isBranchSPlaceholder, isBranchCPlaceholder, isExtension bool) Node {
+
 	extensionNode := ExtensionNode{
 		ListRlpBytes: extListRlpBytes,
 	}
@@ -244,7 +250,10 @@ func addBranchAndPlaceholder(proof1, proof2, extNibblesS, extNibblesC [][]byte,
 	// For stack trie
 	// if 1 st node of proof2 is a branch node and 1st node of Proof1 is an ext node
 	need_placeholder_ext := isBranch(proof2[0]) && (!isTxLeaf(proof1[0]) && !isBranch(proof1[0]))
-
+	if need_placeholder_ext {
+		fmt.Println("need_placeholder_ext", isTxLeaf(proof1[0]), isBranch(proof1[0]), proof1[0])
+		fmt.Println("need_placeholder_ext", isBranch(proof2[0]), proof2[0])
+	}
 	isExtension := (len1 == len2+2) || (len2 == len1+2)
 	if isExtension || need_placeholder_ext {
 		var numNibbles byte
@@ -301,6 +310,8 @@ func addBranchAndPlaceholder(proof1, proof2, extNibblesS, extNibblesC [][]byte,
 	var extNode []byte
 	if need_placeholder_ext {
 		extNode = proof1[0]
+		// FIXME should move to above and need to avoid above [len-3] operation
+		isExtension = need_placeholder_ext
 	} else {
 		if isExtension {
 			if len1 > len2 {
@@ -310,9 +321,6 @@ func addBranchAndPlaceholder(proof1, proof2, extNibblesS, extNibblesC [][]byte,
 			}
 		}
 	}
-
-	// FIXME should move to above and need to avoid above [len-3] operation
-	isExtension = need_placeholder_ext
 
 	// Note that isModifiedExtNode happens also when we have a branch instead of shortExtNode
 	isModifiedExtNode := (!isBranch(longExtNode) && !isShorterProofLastLeaf) || need_placeholder_ext
@@ -324,7 +332,6 @@ func addBranchAndPlaceholder(proof1, proof2, extNibblesS, extNibblesC [][]byte,
 	if len1 > len2 {
 		node = prepareBranchNode(proof1[len1-2], proof1[len1-2], extNode, extNode, extListRlpBytes, extValues,
 			key[keyIndex+numberOfNibbles], driftedInd, false, true, isExtension)
-
 	} else {
 		node = prepareBranchNode(proof2[len2-2], proof2[len2-2], extNode, extNode, extListRlpBytes, extValues,
 			key[keyIndex+numberOfNibbles], driftedInd, true, false, isExtension)

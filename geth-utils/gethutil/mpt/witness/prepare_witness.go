@@ -301,10 +301,19 @@ func prepareStackTrieWitness(testName string, list types.DerivableList) {
 	var key []byte
 	var nodes []Node
 	for i, proof := range proofs {
-		// fmt.Println("* PROOF", i)
+		// i := len(proofs) - 1
+		// proof := proofs[i]
+		idx := i + 1
+		fmt.Println("* PROOF", idx)
 		nodes = append(nodes, GetStartNode(testName, common.Hash{}, root, 0))
-		key = rlp.AppendUint64(key[:0], uint64(i))
-		node := GenerateWitness(uint(i), key, key, &proof)
+		var node []Node
+		if (i <= 0x7f && len(proofs)-1 == i) || i == 127 {
+			// key = rlp.AppendUint64(key[:0], uint64(0))
+			// node = GenerateWitness(uint(0), key, key, &proof)
+		} else {
+			key = rlp.AppendUint64(key[:0], uint64(idx))
+			node = GenerateWitness(uint(idx), key, key, &proof)
+		}
 		nodes = append(nodes, node...)
 		nodes = append(nodes, GetEndNode())
 	}
@@ -329,11 +338,28 @@ func prepareWitnessSpecial(testName string, trieModifications []TrieModification
 	StoreNodes(testName, nodes)
 }
 
+// For stack trie, we have the following combinations ([proofS] -> [proofC])
+//
+//	-[] [(empty)] -> [LEAF]
+//	-[] [LEAF] -> [EXT - BRANCH - LEAF]
+//	-[] [EXT - BRANCH] -> [EXT - BRANCH - LEAF]
+//	-[] [EXT - BRANCH] -> [BRANCH - LEAF] (modified extension)
+//	-[] [BRANCH - LEAF] -> [BRANCH - BRANCH - LEAF] (modified extension)
+//	-[] [BRANCH - BRANCH - (...BRANCH)] -> [BRANCH - BRANCH - (...BRANCH) - LEAF]
+//	-[] [BRANCH - BRANCH - LEAF ] -> [BRANCH - BRANCH - LEAF - BRANCH - LEAF]
+//	-[] [LEAF] -> [LEAF]
+//	-[] [LEAF - LEAF] -> [LEAF - LEAF]
+//	-[] [BRANCH - LEAF] -> [BRANCH - BRANCH - EXT - BRANCH - LEAF]
+//	-[] [BRANCH - BRANCH - EXT - BRANCH - (LEAF)] -> [BRANCH - BRANCH - EXT - BRANCH - EXT - BRANCH - LEAF]
+//	-[] [BRANCH - BRANCH - EXT - BRANCH - (...BRANCH)] -> [BRANCH - BRANCH - EXT - BRANCH - (...BRANCH) - LEAF]
+//	-[] [LEAF] -> [BRANCH - BRANCH - EXT - BRANCH - BRANCH - LEAF]
 func GenerateWitness(txIdx uint, key, value []byte, proof *trie.StackProof) []Node {
 	k := trie.KeybytesToHex(key)
 	k = k[:len(k)-1]
+	// padding k to 32 bytes
 	kk := make([]byte, 32-len(k))
 	k = append(k, kk...)
+	fmt.Println("txIdx", txIdx)
 
 	toBeHashed := make([][]byte, 0)
 	proofS := proof.GetProofS()
@@ -347,21 +373,25 @@ func GenerateWitness(txIdx uint, key, value []byte, proof *trie.StackProof) []No
 	len1 := len(proofS)
 	len2 := len(proofC)
 
-	is_end_of_leaf := true
+	is_end_with_leaf := true
 	if len1 > 0 { // len = 0 when trie trie is empty
-		is_end_of_leaf = isTxLeaf(proofS[len1-1])
+		is_end_with_leaf = isTxLeaf(proofS[len1-1])
 	}
 
-	upTo := minLen
+	isStartWithExt := false
+	if len1 > 0 && (!isBranch(proofS[0]) && !isTxLeaf(proofS[0])) {
+		isStartWithExt = true
+	}
+
+	upTo := minLen - 1
 	additionalBranch := false
-	// In stack trie, proofC is always end up with a leaf node
-	// If proofS is not end up with a leaf, we need to make their length equal by setting additionalBranch to true
-	// For example, when the num of txs is less than 128, the last proof will be the first tx (aka. tx id is 0)
-	// and the first tx will be inserted at the position 8.
-	// The proof will be like this proofS: [ext - branch] and proofC: [branch - leaf]
-	if !is_end_of_leaf || (len1 < len2 && len1 > 0) {
+	// In stack trie, proofC is always end up with a leaf node, but it's not the case for proofS.
+	// So, basically additionalBranch is always true, even when len1 == len2
+	if len1 > 0 && len1 != 1 {
 		additionalBranch = true
-		upTo = minLen - 1
+	}
+	if isTxLeaf(proofS[len1-1]) && isTxLeaf(proofC[len2-1]) {
+		upTo = minLen
 	}
 
 	isExtension := false
@@ -376,25 +406,21 @@ func GenerateWitness(txIdx uint, key, value []byte, proof *trie.StackProof) []No
 	var nodes []Node
 	for i := 0; i < upTo; i++ {
 		if !isBranch(proofS[i]) {
-			// areThereNibbles := len(extNibblesS) != 0 || len(extNibblesC) != 0
-			// If i < upTo-1, it means it's not a leaf, so it's an extension node.
-			// There is no any special relation between isNonExistingProof and isExtension,
-			// except that in the non-existing proof the extension node can appear in `i == upTo-1`.
-			// For non-existing proof, the last node in the proof could be an extension node (we have
-			// nil in the underlying branch). For the non-existing proof with the wrong leaf
-			// (non-existing proofs can be with a nil leaf or with a wrong leaf),
-			// we don't need to worry because it appears in i = upTo-1).
-			// if (i != upTo-1) || areThereNibbles { // extension node
-			// 	var numberOfNibbles byte
-			// 	isExtension = true
+			fmt.Println("extNibbleS/C", extNibblesS, extNibblesC)
+			areThereNibbles := len(extNibblesS) != 0
+			if areThereNibbles { // extension node
+				var numberOfNibbles byte
+				isExtension = true
 
-			// 	// FIXME: handle the case of proofS(ext), proofC(branch), and it needs to add a branch placeholder at proofS?
-			// 	numberOfNibbles, extListRlpBytes, extValues = prepareExtensions(extNibblesS, extensionNodeInd, proofS[i], proofC[i])
+				// FIXME: handle the case of proofS(ext), proofC(branch), and it needs to add a branch placeholder at proofS?
+				numberOfNibbles, extListRlpBytes, extValues =
+					prepareExtensions(extNibblesS, extensionNodeInd, proofS[i], proofC[i])
 
-			// 	keyIndex += int(numberOfNibbles)
-			// 	extensionNodeInd++
-			// 	continue
-			// }
+				keyIndex += int(numberOfNibbles)
+				// extensionNodeInd++
+				fmt.Println("Increase keyIdx", keyIndex)
+				continue
+			}
 
 			l := len(proofS)
 			node := prepareTxLeafNode(uint(i), proofS[l-1], proofC[l-1], k, nil, false, false, false)
@@ -407,10 +433,10 @@ func GenerateWitness(txIdx uint, key, value []byte, proof *trie.StackProof) []No
 				extNode2 = proofC[i-1]
 			}
 
-			fmt.Println("  s:", proofS[i])
-			fmt.Println("  c:", proofC[i])
-			bNode := prepareBranchNode(proofS[i], proofC[i], extNode1, extNode2, extListRlpBytes, extValues,
-				k[keyIndex], k[keyIndex], false, false, isExtension)
+			bNode := prepareBranchNode(
+				proofS[i], proofC[i], extNode1, extNode2, extListRlpBytes,
+				extValues, k[keyIndex], k[keyIndex],
+				false, false, isExtension)
 			nodes = append(nodes, bNode)
 
 			keyIndex += 1
@@ -418,56 +444,48 @@ func GenerateWitness(txIdx uint, key, value []byte, proof *trie.StackProof) []No
 			isExtension = false
 		}
 	}
-	// fmt.Println("len", len1, len2)
-	fmt.Println("*** ", nodes)
 
 	// To address the length of proofS and proofC is not equal or the order of the type is matched.
 	if additionalBranch {
 		leafRow0 := proofS[0] // To compute the drifted position.
+		isModifiedExtNode, _, _, bNode :=
+			addBranchAndPlaceholder(
+				proofS, proofC, extNibblesS, extNibblesC,
+				leafRow0, k, nil,
+				keyIndex, extensionNodeInd, additionalBranch,
+				false, false, is_end_with_leaf, &toBeHashed)
 
-		// There are two kinds of situations needed to add an additional branch
-		// A. when the number of txs is less than or equals 128
-		// The last proof (which is the first tx) looks like this,
-		//   proofS: EXT - BRANCH
-		//   proofC: BRANCH - LEAF
-		// B. when the 129th tx inserted, the last proof looks like,
-		//   proofS: BRANCH - LEAF
-		// 	 proofC: BRANCH - BRANCH - LEAF
-		isModifiedExtNode, _, numberOfNibbles, bNode := addBranchAndPlaceholder(proofS, proofC, extNibblesS, extNibblesC,
-			leafRow0, k, nil,
-			keyIndex, extensionNodeInd, additionalBranch,
-			false, false, is_end_of_leaf, &toBeHashed)
-
-		nodes = append(nodes, bNode)
+		if !isStartWithExt {
+			nodes = append(nodes, bNode)
+		}
 
 		var leafNode Node
 		// Add a tx leaf after branch placeholder
 		if !isModifiedExtNode {
-			leafNode = prepareTxLeafNode(txIdx, proofS[len1-1], proofC[len2-1], k, nil, false, false, false)
+			leafNode = prepareTxLeafNode(txIdx, proofS[len1-1], proofC[len2-1], k, nil, isBranch(proofS[len1-1]), false, false)
 		} else {
-			isSModExtension := false
-			// isCModExtension := false
-			// FIXME might not fit our case bcs we have  [EXT - BRANCH] --> [BRANCH - LEAF]
-			if len2 > len1 {
-				isSModExtension = true
-			}
-			leafNode = prepareTxLeafAndPlaceholderNode(txIdx, proofC[len2-1], k, isSModExtension)
+			fmt.Println("SHOULD NOT GET INTO THIS!!")
+			// TODO might not fit our case bcs we have  [EXT - BRANCH] --> [BRANCH - LEAF]
+			// isSModExtension := false
+			// if len2 > len1 {
+			// 	isSModExtension = true
+			// }
+			// leafNode = prepareTxLeafAndPlaceholderNode(txIdx, proofC[len2-1], k, isSModExtension)
 		}
 
 		// When a proof element is a modified extension node (new extension node appears at the position
 		// of the existing extension node), additional rows are added (extension node before and after
 		// modification).
 		if isModifiedExtNode {
-			// FIXME neighbor is for drifted node and what is drifted node:
-			// the leaf being moved from one branch to a newly created branch
-			leafNode = equipLeafWithModExtensionNode(nil, leafNode, common.Address{0}, proofS, proofC, proofC,
-				extNibblesS, extNibblesC, k, nil,
-				keyIndex, extensionNodeInd, numberOfNibbles, false, &toBeHashed)
+			fmt.Println("SHOULD NOT GET INTO THIS 2!!")
+			// TODO
+			// leafNode = equipLeafWithModExtensionNode(nil, leafNode, common.Address{0}, proofS, proofC, proofC,
+			// 	extNibblesS, extNibblesC, k, nil,
+			// 	keyIndex, extensionNodeInd, numberOfNibbles, false, &toBeHashed)
 		}
 		nodes = append(nodes, leafNode)
 	}
-	fmt.Println("*** FINAL", nodes)
-	// return []Node{}
+
 	return nodes
 }
 

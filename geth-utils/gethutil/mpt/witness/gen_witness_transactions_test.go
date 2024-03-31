@@ -121,7 +121,7 @@ func transactionsStackTrieInsertionTemplate(t *testing.T, n int) {
 }
 
 func TestTransactionInsertion(t *testing.T) {
-	txs := makeTransactions(4)
+	txs := makeTransactions(256)
 	prepareStackTrieWitness("TransactionInsertion", types.Transactions(txs))
 }
 

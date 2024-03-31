@@ -642,7 +642,7 @@ func (sp *StackProof) GetNibblesC() [][]byte {
 
 func printProof(ps [][]byte) {
 
-	fmt.Print(" ")
+	fmt.Print(" [")
 	for _, p := range ps {
 		if p[0] == 226 && p[1] == 16 && p[2] == 160 {
 			fmt.Print("EXT - ")
@@ -655,16 +655,16 @@ func printProof(ps [][]byte) {
 				// fmt.Println("  ", p)
 			}
 		} else {
-			fmt.Print("LEAF -")
-			fmt.Println("  ", p)
+			fmt.Print("LEAF - ")
+			// fmt.Print(" (", p, ") - ")
 		}
 	}
-	fmt.Println("  ")
+	fmt.Println("]")
 
 }
 
 func (st *StackTrie) UpdateAndGetProof(db ethdb.KeyValueReader, indexBuf, value []byte) (StackProof, error) {
-	fmt.Println("====")
+	fmt.Println(" ====")
 	proofS, nibblesS, err := st.GetProof(db, indexBuf)
 	if err != nil {
 		return StackProof{}, err
@@ -679,7 +679,6 @@ func (st *StackTrie) UpdateAndGetProof(db ethdb.KeyValueReader, indexBuf, value 
 		return StackProof{}, err
 	}
 	len2 := len(proofC)
-	fmt.Println(" Proof S C ", len1, len2)
 	printProof(proofC)
 
 	// fmt.Println(len1, len2)
@@ -703,6 +702,7 @@ func (st *StackTrie) UpdateAndGetProofs(db ethdb.KeyValueReader, list types.Deri
 	// order is correct.
 	var indexBuf []byte
 	for i := 1; i < list.Len() && i <= 0x7f; i++ {
+		fmt.Print(i)
 		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
 		value := types.EncodeForDerive(list, i, valueBuf)
 		proof, err := st.UpdateAndGetProof(db, indexBuf, value)
@@ -715,6 +715,7 @@ func (st *StackTrie) UpdateAndGetProofs(db ethdb.KeyValueReader, list types.Deri
 	// special case when index is 0
 	// rlp.AppendUint64() encodes index 0 to [128]
 	if list.Len() > 0 {
+		fmt.Print("0")
 		indexBuf = rlp.AppendUint64(indexBuf[:0], 0)
 		value := types.EncodeForDerive(list, 0, valueBuf)
 		proof, err := st.UpdateAndGetProof(db, indexBuf, value)
@@ -725,6 +726,7 @@ func (st *StackTrie) UpdateAndGetProofs(db ethdb.KeyValueReader, list types.Deri
 	}
 
 	for i := 0x80; i < list.Len(); i++ {
+		fmt.Print(i)
 		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
 		value := types.EncodeForDerive(list, i, valueBuf)
 		proof, err := st.UpdateAndGetProof(db, indexBuf, value)
@@ -740,7 +742,7 @@ func (st *StackTrie) UpdateAndGetProofs(db ethdb.KeyValueReader, list types.Deri
 
 func (st *StackTrie) GetProof(db ethdb.KeyValueReader, key []byte) ([][]byte, [][]byte, error) {
 	k := KeybytesToHex(key)
-	fmt.Println("k", k)
+	// fmt.Println("k", k)
 	if st.nodeType == emptyNode {
 		return [][]byte{}, nil, nil
 	}
@@ -832,8 +834,8 @@ func (st *StackTrie) GetProof(db ethdb.KeyValueReader, key []byte) ([][]byte, []
 					// fmt.Println("** ", element)
 
 					// FIXME only one nibble case
-					nibble := element[0]
-					// fmt.Println(" Ext nibble:", nibble)
+					nibble := element[0] - 16
+					// fmt.Println(" Ext nibble:", element)
 					nibbles = append(nibbles, []byte{nibble})
 				}
 			}
@@ -844,9 +846,5 @@ func (st *StackTrie) GetProof(db ethdb.KeyValueReader, key []byte) ([][]byte, []
 		slices.Reverse(proof)
 	}
 
-	// given a default value
-	if len(nibbles) == 0 {
-		nibbles = append(nibbles, []byte{0})
-	}
 	return proof, nibbles, nil
 }
