@@ -301,15 +301,12 @@ func prepareStackTrieWitness(testName string, list types.DerivableList) {
 	var key []byte
 	var nodes []Node
 	for i, proof := range proofs {
-		// i := len(proofs) - 1
-		// proof := proofs[i]
 		idx := i + 1
-		fmt.Println("* PROOF", idx)
 		nodes = append(nodes, GetStartNode(testName, common.Hash{}, root, 0))
 		var node []Node
 		if (i <= 0x7f && len(proofs)-1 == i) || i == 127 {
-			// key = rlp.AppendUint64(key[:0], uint64(0))
-			// node = GenerateWitness(uint(0), key, key, &proof)
+			key = rlp.AppendUint64(key[:0], uint64(0))
+			node = GenerateWitness(uint(0), key, key, &proof)
 		} else {
 			key = rlp.AppendUint64(key[:0], uint64(idx))
 			node = GenerateWitness(uint(idx), key, key, &proof)
@@ -346,9 +343,12 @@ func prepareWitnessSpecial(testName string, trieModifications []TrieModification
 //	-[] [EXT - BRANCH] -> [BRANCH - LEAF] (modified extension)
 //	-[] [BRANCH - LEAF] -> [BRANCH - BRANCH - LEAF] (modified extension)
 //	-[] [BRANCH - BRANCH - (...BRANCH)] -> [BRANCH - BRANCH - (...BRANCH) - LEAF]
+//	-[] [BRANCH - BRANCH - BRANCH - EXT] -> [BRANCH - BRANCH - BRANCH - BRANCH - LEAF]
 //	-[] [BRANCH - BRANCH - LEAF ] -> [BRANCH - BRANCH - LEAF - BRANCH - LEAF]
 //	-[] [LEAF] -> [LEAF]
-//	-[] [LEAF - LEAF] -> [LEAF - LEAF]
+//	-[] [EXT] -> [EXT]
+//	-[] [EXT - EXT] -> [EXT - EXT]
+//	-[] [EXT - LEAF] -> [LEAF]
 //	-[] [BRANCH - LEAF] -> [BRANCH - BRANCH - EXT - BRANCH - LEAF]
 //	-[] [BRANCH - BRANCH - EXT - BRANCH - (LEAF)] -> [BRANCH - BRANCH - EXT - BRANCH - EXT - BRANCH - LEAF]
 //	-[] [BRANCH - BRANCH - EXT - BRANCH - (...BRANCH)] -> [BRANCH - BRANCH - EXT - BRANCH - (...BRANCH) - LEAF]
@@ -368,30 +368,35 @@ func GenerateWitness(txIdx uint, key, value []byte, proof *trie.StackProof) []No
 	extNibblesC := proof.GetNibblesC()
 
 	keyIndex := 0
-	// The length of `proofS` must be equal or smaller than `proofC`
-	minLen := len(proofS)
 	len1 := len(proofS)
 	len2 := len(proofC)
+	minLen := min(len1, len2)
 
-	is_end_with_leaf := true
-	if len1 > 0 { // len = 0 when trie trie is empty
-		is_end_with_leaf = isTxLeaf(proofS[len1-1])
-	}
-
-	isStartWithExt := false
-	if len1 > 0 && (!isBranch(proofS[0]) && !isTxLeaf(proofS[0])) {
-		isStartWithExt = true
+	var nodes []Node
+	if len1 == 0 {
+		leafNode := prepareTxLeafAndPlaceholderNode(0, proofC[0], k, false)
+		nodes = append(nodes, leafNode)
 	}
 
 	upTo := minLen - 1
+	is_end_with_leaf := true
+	isStartWithExt := false
 	additionalBranch := false
-	// In stack trie, proofC is always end up with a leaf node, but it's not the case for proofS.
-	// So, basically additionalBranch is always true, even when len1 == len2
-	if len1 > 0 && len1 != 1 {
-		additionalBranch = true
-	}
-	if isTxLeaf(proofS[len1-1]) && isTxLeaf(proofC[len2-1]) {
-		upTo = minLen
+	if len1 > 0 {
+		is_end_with_leaf = isTxLeaf(proofS[len1-1])
+
+		if isTxExt(proofS[0]) {
+			isStartWithExt = true
+		}
+
+		// The length of proofS and proofC is not equal
+		// The last element of proofC is an extension
+		if len1 != len2 && isTxExt(proofC[len2-1]) {
+			additionalBranch = true
+		}
+		if isTxLeaf(proofS[len1-1]) && isTxLeaf(proofC[len2-1]) {
+			upTo = minLen
+		}
 	}
 
 	isExtension := false
@@ -403,10 +408,10 @@ func GenerateWitness(txIdx uint, key, value []byte, proof *trie.StackProof) []No
 		extValues = append(extValues, make([]byte, 34))
 	}
 
-	var nodes []Node
+	// fmt.Println("upto", upTo)
 	for i := 0; i < upTo; i++ {
 		if !isBranch(proofS[i]) {
-			fmt.Println("extNibbleS/C", extNibblesS, extNibblesC)
+			// fmt.Println("extNibbleS/C", extNibblesS, extNibblesC)
 			areThereNibbles := len(extNibblesS) != 0
 			if areThereNibbles { // extension node
 				var numberOfNibbles byte
@@ -417,13 +422,12 @@ func GenerateWitness(txIdx uint, key, value []byte, proof *trie.StackProof) []No
 					prepareExtensions(extNibblesS, extensionNodeInd, proofS[i], proofC[i])
 
 				keyIndex += int(numberOfNibbles)
-				// extensionNodeInd++
+				extensionNodeInd++
 				fmt.Println("Increase keyIdx", keyIndex)
 				continue
 			}
 
-			l := len(proofS)
-			node := prepareTxLeafNode(uint(i), proofS[l-1], proofC[l-1], k, nil, false, false, false)
+			node := prepareTxLeafNode(uint(i), proofS[len1-1], proofC[len2-1], k, nil, false, false, false)
 			nodes = append(nodes, node)
 		} else {
 			var extNode1 []byte = nil

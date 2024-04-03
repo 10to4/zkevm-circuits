@@ -31,12 +31,14 @@ func isTxLeaf(proofEl []byte) bool {
 	check(err)
 	c, err1 := rlp.CountValues(elems)
 	check(err1)
-	isHashedNode := false
-	if proofEl[0] == 226 && proofEl[1] == 32 && proofEl[2] == 160 {
-		isHashedNode = true
-	}
+	// 2: hashed node
 	// 9: for tx (Nonce, Gas, GasPrice, Value, To, Data, r, s, v)
-	return c == 9 || isHashedNode
+	// ext node is also 2
+	return (c == 9 || c == 2) && !isTxExt(proofEl)
+}
+
+func isTxExt(proofEl []byte) bool {
+	return proofEl[0] == 226 && proofEl[1]%16 == 0 && proofEl[2] == 160
 }
 
 // prepareBranchWitness takes the rows that are to be filled with branch data and it takes

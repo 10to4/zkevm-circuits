@@ -640,37 +640,67 @@ func (sp *StackProof) GetNibblesC() [][]byte {
 	return sp.nibblesC
 }
 
-func printProof(ps [][]byte) {
+func isBranch(proofEl []byte) bool {
+	elems, _, _ := rlp.SplitList(proofEl)
+	c, _ := rlp.CountValues(elems)
+	return c == 17
+}
 
+func isTxLeaf(proofEl []byte) bool {
+	elems, _, _ := rlp.SplitList(proofEl)
+	c, _ := rlp.CountValues(elems)
+
+	// 9: for tx (Nonce, Gas, GasPrice, Value, To, Data, r, s, v)
+	return c == 9 || c == 2
+}
+
+func printProof(ps [][]byte, idx []byte) {
+
+	enable := byte(200)
 	fmt.Print(" [")
 	for _, p := range ps {
-		if p[0] == 226 && p[1] == 16 && p[2] == 160 {
+		if p[0] == 226 && p[1]%16 == 0 && p[2] == 160 {
 			fmt.Print("EXT - ")
-		} else if p[0] == 248 || p[0] == 249 {
-			offset := p[0] - 248 + 1
-			if ((p[offset]-81)%32 == 0) && (p[offset+1] == 128 || p[offset+1] == 160) {
-				fmt.Print("BRANCH - ")
-			} else {
-				fmt.Print("LEAF - ")
-				// fmt.Println("  ", p)
+			if idx[0] > enable {
+				fmt.Print(" (", p, ") - ")
+			}
+		} else if isBranch((p)) {
+			fmt.Print("BRANCH - ")
+		} else if isTxLeaf(p) {
+			fmt.Print("LEAF - ")
+			if idx[0] > enable {
+				fmt.Print(" (", p, ") - ")
 			}
 		} else {
-			fmt.Print("LEAF - ")
-			// fmt.Print(" (", p, ") - ")
+			elems, _, _ := rlp.SplitList(p)
+			c, _ := rlp.CountValues(elems)
+			fmt.Print(c, " (", elems, ") - ")
 		}
+		// else if p[0] == 248 || p[0] == 249 {
+		// 	offset := p[0] - 248 + 1
+		// 	if ((p[offset]-81)%32 == 0) && (p[offset+1] == 128 || p[offset+1] == 160) {
+		// 		fmt.Print("BRANCH - ")
+		// 	} else {
+		// 		fmt.Print("LEAF - ")
+		// 		// fmt.Println("  ", p)
+		// 	}
+		// } else {
+		// 	fmt.Print("LEAF - ")
+		// 	fmt.Print(" (", p, ") - ")
+		// }
 	}
 	fmt.Println("]")
 
 }
 
 func (st *StackTrie) UpdateAndGetProof(db ethdb.KeyValueReader, indexBuf, value []byte) (StackProof, error) {
-	fmt.Println(" ====")
+	fmt.Println(" ====", indexBuf)
 	proofS, nibblesS, err := st.GetProof(db, indexBuf)
 	if err != nil {
 		return StackProof{}, err
 	}
 	len1 := len(proofS)
-	printProof(proofS)
+	printProof(proofS, indexBuf)
 
 	st.Update(indexBuf, value)
 
@@ -679,7 +709,7 @@ func (st *StackTrie) UpdateAndGetProof(db ethdb.KeyValueReader, indexBuf, value 
 		return StackProof{}, err
 	}
 	len2 := len(proofC)
-	printProof(proofC)
+	printProof(proofC, indexBuf)
 
 	// fmt.Println(len1, len2)
 	if len1 >= len2 {
