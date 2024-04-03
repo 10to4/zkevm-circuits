@@ -248,13 +248,13 @@ func addBranchAndPlaceholder(proof1, proof2, extNibblesS, extNibblesC [][]byte,
 		extValues = append(extValues, make([]byte, valueLen))
 	}
 
-	// FIXME have a 'isExtension' function
 	// For stack trie
 	// if 1 st node of proof2 is a branch node and 1st node of Proof1 is an ext node
-	need_placeholder_ext := isBranch(proof2[0]) && (!isTxLeaf(proof1[0]) && !isBranch(proof1[0]))
+	need_placeholder_ext := isBranch(proof2[0]) && isTxExt(proof1[0])
 	if need_placeholder_ext {
 		fmt.Println("need_placeholder_ext", isTxLeaf(proof1[0]), isBranch(proof1[0]), proof1[0])
 		fmt.Println("need_placeholder_ext", isBranch(proof2[0]), proof2[0])
+		fmt.Println("nibble:", extNibblesS)
 	}
 	isExtension := (len1 == len2+2) || (len2 == len1+2)
 	if isExtension || need_placeholder_ext {

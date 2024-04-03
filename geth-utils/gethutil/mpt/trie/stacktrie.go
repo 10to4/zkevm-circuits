@@ -656,7 +656,7 @@ func isTxLeaf(proofEl []byte) bool {
 
 func printProof(ps [][]byte, idx []byte) {
 
-	enable := byte(200)
+	enable := byte(150)
 	fmt.Print(" [")
 	for _, p := range ps {
 		if p[0] == 226 && p[1]%16 == 0 && p[2] == 160 {
@@ -676,18 +676,6 @@ func printProof(ps [][]byte, idx []byte) {
 			c, _ := rlp.CountValues(elems)
 			fmt.Print(c, " (", elems, ") - ")
 		}
-		// else if p[0] == 248 || p[0] == 249 {
-		// 	offset := p[0] - 248 + 1
-		// 	if ((p[offset]-81)%32 == 0) && (p[offset+1] == 128 || p[offset+1] == 160) {
-		// 		fmt.Print("BRANCH - ")
-		// 	} else {
-		// 		fmt.Print("LEAF - ")
-		// 		// fmt.Println("  ", p)
-		// 	}
-		// } else {
-		// 	fmt.Print("LEAF - ")
-		// 	fmt.Print(" (", p, ") - ")
-		// }
 	}
 	fmt.Println("]")
 
@@ -816,6 +804,11 @@ func (st *StackTrie) GetProof(db ethdb.KeyValueReader, key []byte) ([][]byte, []
 				panic(error)
 			}
 
+			element, _, _ := rlp.SplitList(c_rlp)
+			nibble := element[0] - 16
+			fmt.Println(" HASHED Ext nibble:", element)
+			nibbles = append(nibbles, []byte{nibble})
+
 			proof = append(proof, c_rlp)
 			branchChild := st.getNodeFromBranchRLP(c_rlp, int(k[i]))
 
@@ -865,7 +858,7 @@ func (st *StackTrie) GetProof(db ethdb.KeyValueReader, key []byte) ([][]byte, []
 
 					// FIXME only one nibble case
 					nibble := element[0] - 16
-					// fmt.Println(" Ext nibble:", element)
+					fmt.Println(" Ext nibble:", element)
 					nibbles = append(nibbles, []byte{nibble})
 				}
 			}
