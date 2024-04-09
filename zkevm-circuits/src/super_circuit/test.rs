@@ -137,6 +137,7 @@ fn serial_test_super_circuit_1tx_1max_tx() {
         max_bytecode: 512,
         max_evm_rows: 0,
         max_keccak_rows: 0,
+        max_blake2f_rows: 0,
     };
     test_super_circuit(block, circuits_params, Fr::from(TEST_MOCK_RANDOMNESS));
 }
@@ -153,6 +154,7 @@ fn serial_test_super_circuit_1tx_2max_tx() {
         max_bytecode: 512,
         max_evm_rows: 0,
         max_keccak_rows: 0,
+        max_blake2f_rows: 0,
     };
     test_super_circuit(block, circuits_params, Fr::from(TEST_MOCK_RANDOMNESS));
 }
@@ -169,6 +171,7 @@ fn serial_test_super_circuit_2tx_2max_tx() {
         max_bytecode: 512,
         max_evm_rows: 0,
         max_keccak_rows: 0,
+        max_blake2f_rows: 0,
     };
     test_super_circuit(block, circuits_params, Fr::from(TEST_MOCK_RANDOMNESS));
 }

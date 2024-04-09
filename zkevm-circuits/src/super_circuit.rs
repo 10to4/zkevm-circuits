@@ -54,6 +54,7 @@
 pub(crate) mod test;
 
 use crate::{
+    blake2f_circuit::circuit::{Blake2fCircuit, Blake2fCircuitConfig, Blake2fCircuitConfigArgs},
     bytecode_circuit::circuit::{
         BytecodeCircuit, BytecodeCircuitConfig, BytecodeCircuitConfigArgs,
     },
@@ -95,6 +96,7 @@ pub struct SuperCircuitConfig<F: Field> {
     keccak_circuit: KeccakCircuitConfig<F>,
     pi_circuit: PiCircuitConfig<F>,
     exp_circuit: ExpCircuitConfig<F>,
+    blake2f_circuit: Blake2fCircuitConfig<F>,
 }
 
 /// Circuit configuration arguments
@@ -207,6 +209,8 @@ impl<F: Field> SubCircuitConfig<F> for SuperCircuitConfig<F> {
             },
         );
 
+        let blake2f_circuit = Blake2fCircuitConfig::new(meta, Blake2fCircuitConfigArgs {});
+
         Self {
             block_table,
             mpt_table,
@@ -218,6 +222,7 @@ impl<F: Field> SubCircuitConfig<F> for SuperCircuitConfig<F> {
             keccak_circuit,
             pi_circuit,
             exp_circuit,
+            blake2f_circuit,
         }
     }
 }
@@ -241,6 +246,8 @@ pub struct SuperCircuit<F: Field> {
     pub exp_circuit: ExpCircuit<F>,
     /// Keccak Circuit
     pub keccak_circuit: KeccakCircuit<F>,
+    /// Blake2f Circuit
+    pub blake2f_circuit: Blake2fCircuit<F>,
     /// Circuits Parameters
     pub circuits_params: CircuitsParams,
     /// Mock randomness
@@ -286,6 +293,7 @@ impl<F: Field> SubCircuit<F> for SuperCircuit<F> {
         let copy_circuit = CopyCircuit::new_from_block_no_external(block);
         let exp_circuit = ExpCircuit::new_from_block(block);
         let keccak_circuit = KeccakCircuit::new_from_block(block);
+        let blake2f_circuit = Blake2fCircuit::new_from_block(block);
 
         SuperCircuit::<_> {
             evm_circuit,
@@ -296,6 +304,7 @@ impl<F: Field> SubCircuit<F> for SuperCircuit<F> {
             copy_circuit,
             exp_circuit,
             keccak_circuit,
+            blake2f_circuit,
             circuits_params: block.circuits_params,
             mock_randomness: block.randomness,
         }
@@ -312,7 +321,7 @@ impl<F: Field> SubCircuit<F> for SuperCircuit<F> {
         instance.extend_from_slice(&self.state_circuit.instance());
         instance.extend_from_slice(&self.exp_circuit.instance());
         instance.extend_from_slice(&self.evm_circuit.instance());
-
+        instance.extend_from_slice(&self.blake2f_circuit.instance());
         instance
     }
 
@@ -326,8 +335,10 @@ impl<F: Field> SubCircuit<F> for SuperCircuit<F> {
         let tx = TxCircuit::min_num_rows_block(block);
         let exp = ExpCircuit::min_num_rows_block(block);
         let pi = PiCircuit::min_num_rows_block(block);
+        let blake2f = Blake2fCircuit::min_num_rows_block(block);
 
-        let rows: Vec<(usize, usize)> = vec![evm, state, bytecode, copy, keccak, tx, exp, pi];
+        let rows: Vec<(usize, usize)> =
+            vec![evm, state, bytecode, copy, keccak, tx, exp, pi, blake2f];
         let (rows_without_padding, rows_with_padding): (Vec<usize>, Vec<usize>) =
             rows.into_iter().unzip();
         (
@@ -359,6 +370,8 @@ impl<F: Field> SubCircuit<F> for SuperCircuit<F> {
             .synthesize_sub(&config.evm_circuit, challenges, layouter)?;
         self.pi_circuit
             .synthesize_sub(&config.pi_circuit, challenges, layouter)?;
+        self.blake2f_circuit
+            .synthesize_sub(&config.blake2f_circuit, challenges, layouter)?;
         Ok(())
     }
 }

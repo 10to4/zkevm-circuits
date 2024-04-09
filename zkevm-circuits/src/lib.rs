@@ -17,6 +17,7 @@
 #![deny(unsafe_code)]
 #![deny(clippy::debug_assert_with_mut_call)]
 
+pub mod blake2f_circuit;
 pub mod bytecode_circuit;
 pub mod copy_circuit;
 pub mod evm_circuit;

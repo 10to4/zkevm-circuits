@@ -68,6 +68,9 @@ pub struct CircuitsParams {
     /// calculated, so the same circuit will not be able to prove different
     /// witnesses.
     pub max_keccak_rows: usize,
+    /// Maximum number of inputs supported in the Blake2f Circuit
+    pub max_blake2f_rows: usize,
+    
 }
 
 impl Default for CircuitsParams {
@@ -84,6 +87,7 @@ impl Default for CircuitsParams {
             max_bytecode: 512,
             max_evm_rows: 0,
             max_keccak_rows: 0,
+            max_blake2f_rows: 0,
         }
     }
 }

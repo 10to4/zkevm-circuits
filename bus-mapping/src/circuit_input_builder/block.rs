@@ -90,6 +90,8 @@ pub struct Block {
     pub circuits_params: CircuitsParams,
     /// Original block from geth
     pub eth_block: eth_types::Block<eth_types::Transaction>,
+    /// Inputs to the Blake2f
+    pub blake2f_inputs: Vec<Vec<u8>>,
 }
 
 impl Block {
@@ -141,6 +143,7 @@ impl Block {
             sha3_inputs: Vec::new(),
             circuits_params,
             eth_block: eth_block.clone(),
+            blake2f_inputs: Vec::new(),
         })
     }
 
