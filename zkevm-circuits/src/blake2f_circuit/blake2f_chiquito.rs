@@ -76,7 +76,12 @@ fn g_setup<F: Field>(
     (move1, move2): (u64, u64),
     s: usize,
     flag: bool,
-    (bits_row, bits_value, xor_4bits_row, xor_4bits_value): (Queriable<F>, Queriable<F>, Queriable<F>, Queriable<F>)
+    (bits_row, bits_value, xor_4bits_row, xor_4bits_value): (
+        Queriable<F>,
+        Queriable<F>,
+        Queriable<F>,
+        Queriable<F>,
+    ),
 ) {
     let mut a_bits_sum_value = 0.expr() * 1;
     let mut a_bits_sum_mod_value = 0.expr() * 1;
@@ -619,7 +624,12 @@ pub fn blake2f_circuit<F: Field>(
                         (move1, move2),
                         s[i],
                         i % 2 == 1,
-                        (lookup_4bits_row, lookup_4bits_value, lookup_xor_4bits_row, lookup_xor_4bits_value),
+                        (
+                            lookup_4bits_row,
+                            lookup_4bits_value,
+                            lookup_xor_4bits_row,
+                            lookup_xor_4bits_value,
+                        ),
                     );
                 }
 
