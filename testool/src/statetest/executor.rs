@@ -334,6 +334,7 @@ pub fn run_test(
             max_exp_steps: 5000,
             max_keccak_rows: 0,
             max_vertical_circuit_rows: 0,
+            max_blake2f_rows: 0,
         };
         let block_data = BlockData::new_from_geth_data_with_params(geth_data, circuits_params);
 
@@ -375,6 +376,7 @@ pub fn run_test(
             max_evm_rows: 0,
             max_keccak_rows: 0,
             max_vertical_circuit_rows: 0,
+            max_blake2f_rows: 0,
         };
         let (k, mut circuits, mut instances, _builder) =
             SuperCircuit::<Fr>::build(geth_data, circuits_params, Fr::from(0x100)).unwrap();

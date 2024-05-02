@@ -86,6 +86,8 @@ pub struct Block {
     pub precompile_events: PrecompileEvents,
     /// Original block from geth
     pub eth_block: eth_types::Block<eth_types::Transaction>,
+    /// Blake2f inputs
+    pub blake2f_inputs: Vec<Vec<u8>>,
 }
 
 impl Block {
@@ -138,6 +140,7 @@ impl Block {
             sha3_inputs: Vec::new(),
             precompile_events: PrecompileEvents { events: Vec::new() },
             eth_block: eth_block.clone(),
+            blake2f_inputs: Vec::new(),
         })
     }
 

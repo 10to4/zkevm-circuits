@@ -43,6 +43,7 @@ hex = {version = "0.4.3", features = ["serde"]}
 halo2-base = { git = "https://github.com/scroll-tech/halo2-lib", branch = "develop", default-features=false, features=["halo2-pse","display"] }
 halo2-ecc = { git = "https://github.com/scroll-tech/halo2-lib", branch = "develop", default-features=false, features=["halo2-pse","display"] }
 
+chiquito = { git = "https://github.com/10to4/chiquito", branch = "develop-blake2f-zkevm"}
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }

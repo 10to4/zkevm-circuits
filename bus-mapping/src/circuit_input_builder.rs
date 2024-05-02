@@ -131,6 +131,8 @@ pub struct FixedCParams {
     /// then if there is 1 ecPairing in the input, we will return 500_000 as the "row usage"
     /// for the ec circuit.
     pub max_vertical_circuit_rows: usize,
+    ///
+    pub max_blake2f_rows: usize,
 }
 
 /// Unset Circuits Parameters
@@ -197,6 +199,7 @@ impl Default for FixedCParams {
             max_evm_rows: 0,
             max_keccak_rows: 0,
             max_vertical_circuit_rows: 0,
+            max_blake2f_rows: 0,
         }
     }
 }
@@ -935,6 +938,7 @@ impl<C: CircuitsParams> CircuitInputBuilder<C> {
             max_evm_rows,
             max_keccak_rows,
             max_vertical_circuit_rows: 0,
+            max_blake2f_rows: 0, // todo
         }
     }
 }

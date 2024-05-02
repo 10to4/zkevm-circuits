@@ -22,6 +22,7 @@ compile_error!("bus-mapping: notwasm feature must be disabled when target arch i
 #[cfg(all(not(target_arch = "wasm32"), not(feature = "notwasm")))]
 compile_error!("bus-mapping: notwasm feature must be enabled when target arch is not wasm");
 
+pub mod blake2f_circuit;
 pub mod bytecode_circuit;
 #[allow(dead_code, reason = "under active development")]
 pub mod circuit_tools;

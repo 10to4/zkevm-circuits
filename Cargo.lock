@@ -121,6 +121,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ark-std"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94893f1e0c6eeab764ade8dc4c0db24caf4fe7cbbaafc0eba0a9030f447b5185"
+dependencies = [
+ "num-traits",
+ "rand",
+]
+
+[[package]]
 name = "array-init"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -168,6 +178,12 @@ dependencies = [
  "pharos",
  "rustc_version",
 ]
+
+[[package]]
+name = "atomic"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c59bdb34bc650a32731b31bd8f0829cc15d24a708ee31559e0bb34f2bc320cba"
 
 [[package]]
 name = "atty"
@@ -241,6 +257,15 @@ name = "bech32"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d86b93f97252c47b41663388e6d155714a9d0c398b99f1005cbc5f978b29f445"
+
+[[package]]
+name = "bincode"
+version = "1.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "bit-set"
@@ -351,7 +376,7 @@ dependencies = [
  "ethers-core",
  "ethers-providers",
  "gadgets",
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "hex",
  "itertools 0.10.5",
  "lazy_static",
@@ -466,6 +491,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chiquito"
+version = "0.1.2023110800"
+source = "git+https://github.com/10to4/chiquito?branch=develop-blake2f-zkevm#352b8d63e22ef7531f6addae6c94aa95f6127a93"
+dependencies = [
+ "halo2_proofs 0.3.0",
+ "num-bigint",
+ "plonkish_backend",
+ "polyexen",
+ "pyo3",
+ "regex",
+ "serde",
+ "serde_json",
+ "uuid 1.8.0",
+]
+
+[[package]]
 name = "chrono"
 version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -488,12 +529,12 @@ dependencies = [
 name = "circuit-benchmarks"
 version = "0.1.0"
 dependencies = [
- "ark-std",
+ "ark-std 0.3.0",
  "bus-mapping",
  "env_logger",
  "eth-types",
  "ethers-signers",
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "itertools 0.10.5",
  "mock",
  "rand",
@@ -1131,7 +1172,7 @@ dependencies = [
  "sha2 0.10.8",
  "sha3 0.10.8",
  "thiserror",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -1140,7 +1181,7 @@ version = "0.1.0"
 dependencies = [
  "ethers-core",
  "ethers-signers",
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "hex",
  "itertools 0.10.5",
  "lazy_static",
@@ -1674,7 +1715,7 @@ version = "0.1.0"
 dependencies = [
  "digest 0.7.6",
  "eth-types",
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "itertools 0.10.5",
  "rand",
  "sha3 0.7.3",
@@ -1696,6 +1737,7 @@ version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
+ "serde",
  "typenum",
  "version_check",
  "zeroize",
@@ -1796,7 +1838,7 @@ version = "0.2.2"
 source = "git+https://github.com/scroll-tech/halo2-lib?branch=develop#40ba7e3bbf013b55c59283534c9489701f9212d0"
 dependencies = [
  "ff",
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "itertools 0.10.5",
  "num-bigint",
  "num-integer",
@@ -1826,18 +1868,57 @@ dependencies = [
 
 [[package]]
 name = "halo2_proofs"
+version = "0.2.0"
+source = "git+https://github.com/han0110/halo2.git?branch=feature/for-benchmark#4981b8d5bdaab04af9b56a5d2c482b6eec9f7fa4"
+dependencies = [
+ "ark-std 0.4.0",
+ "blake2b_simd",
+ "ff",
+ "group",
+ "halo2curves 0.1.0",
+ "rand_chacha",
+ "rand_core",
+ "rayon",
+ "sha3 0.9.1",
+ "tracing",
+]
+
+[[package]]
+name = "halo2_proofs"
 version = "0.3.0"
 source = "git+https://github.com/privacy-scaling-explorations/halo2.git?tag=v0.3.0#73408a140737d8336490452193b21f5a7a94e7de"
 dependencies = [
  "blake2b_simd",
  "ff",
  "group",
- "halo2curves",
+ "halo2curves 0.6.1",
  "rand_chacha",
  "rand_core",
  "rayon",
  "sha3 0.9.1",
  "tracing",
+]
+
+[[package]]
+name = "halo2curves"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6b1142bd1059aacde1b477e0c80c142910f1ceae67fc619311d6a17428007ab"
+dependencies = [
+ "blake2b_simd",
+ "ff",
+ "group",
+ "lazy_static",
+ "num-bigint",
+ "num-traits",
+ "pasta_curves",
+ "paste",
+ "rand",
+ "rand_core",
+ "serde",
+ "serde_arrays",
+ "static_assertions",
+ "subtle",
 ]
 
 [[package]]
@@ -1849,6 +1930,7 @@ dependencies = [
  "blake2b_simd",
  "ff",
  "group",
+ "hex",
  "lazy_static",
  "num-bigint",
  "num-traits",
@@ -1858,6 +1940,8 @@ dependencies = [
  "rand",
  "rand_core",
  "rayon",
+ "serde",
+ "serde_arrays",
  "static_assertions",
  "subtle",
 ]
@@ -1867,7 +1951,7 @@ name = "halo2wrong"
 version = "0.1.0"
 source = "git+https://github.com/privacy-scaling-explorations/halo2wrong?tag=v2024_01_31#1fe10a798edde7a0686248c29cae96ca79b710ae"
 dependencies = [
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "num-bigint",
  "num-integer",
  "num-traits",
@@ -2148,6 +2232,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "indoc"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfa799dd5ed20a7e349f3b4639aa80d74549c81716d9ec4f994c9b5815598306"
+
+[[package]]
 name = "inout"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2189,7 +2279,7 @@ dependencies = [
  "ethers",
  "ethers-contract-abigen",
  "glob",
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "itertools 0.10.5",
  "lazy_static",
  "log",
@@ -2469,10 +2559,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "523dc4f511e55ab87b694dc30d0f820d60906ef06413f93d4d7a1385599cc149"
 
 [[package]]
+name = "memoffset"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
+name = "minimal-lexical"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "miniz_oxide"
@@ -2520,7 +2625,7 @@ dependencies = [
  "gadgets",
  "geth-utils",
  "glob",
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "hex",
  "hyper",
  "hyper-rustls",
@@ -2536,6 +2641,16 @@ name = "new_debug_unreachable"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4a24736216ec316047a1fc4252e27dabb04218aa4a3f37c6e7ddbf1f9782b54"
+
+[[package]]
+name = "nom"
+version = "7.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
+dependencies = [
+ "memchr",
+ "minimal-lexical",
+]
 
 [[package]]
 name = "num"
@@ -2814,8 +2929,10 @@ dependencies = [
  "blake2b_simd",
  "ff",
  "group",
+ "hex",
  "lazy_static",
  "rand",
+ "serde",
  "static_assertions",
  "subtle",
 ]
@@ -3034,11 +3151,60 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
 
 [[package]]
+name = "plonkish_backend"
+version = "0.1.0"
+source = "git+https://github.com/qwang98/plonkish.git?branch=main#e0125fe84e0ce3b1ca1b66c06c5922e487d82912"
+dependencies = [
+ "bincode",
+ "bitvec",
+ "generic-array 0.14.7",
+ "halo2_proofs 0.2.0",
+ "halo2curves 0.1.0",
+ "itertools 0.10.5",
+ "num-bigint",
+ "num-integer",
+ "pasta_curves",
+ "poseidon 0.2.0 (git+https://github.com/han0110/poseidon?branch=feature/with-spec)",
+ "rand",
+ "rayon",
+ "serde",
+ "sha3 0.10.8",
+]
+
+[[package]]
+name = "polyexen"
+version = "0.1.0"
+source = "git+https://github.com/Dhole/polyexen.git?rev=16a85c5411f804dc49bbf373d24ff9eedadedfbe#16a85c5411f804dc49bbf373d24ff9eedadedfbe"
+dependencies = [
+ "halo2_proofs 0.3.0",
+ "lazy_static",
+ "log",
+ "nom",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "pest",
+ "pest_derive",
+ "rand",
+ "rand_chacha",
+ "static_assertions",
+]
+
+[[package]]
 name = "poseidon"
 version = "0.2.0"
 source = "git+https://github.com/privacy-scaling-explorations/poseidon?tag=v2024_01_31#d29f35d9744e0c58b63679a15730ff2fab470ef2"
 dependencies = [
- "halo2curves",
+ "halo2curves 0.6.1",
+ "subtle",
+]
+
+[[package]]
+name = "poseidon"
+version = "0.2.0"
+source = "git+https://github.com/han0110/poseidon?branch=feature/with-spec#fa4c2544ed38666f1f72d1c4fd0956756a7112b3"
+dependencies = [
+ "halo2curves 0.1.0",
  "subtle",
 ]
 
@@ -3183,6 +3349,66 @@ dependencies = [
  "rand_xorshift",
  "regex-syntax 0.8.2",
  "unarray",
+]
+
+[[package]]
+name = "pyo3"
+version = "0.19.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e681a6cfdc4adcc93b4d3cf993749a4552018ee0a9b65fc0ccfad74352c72a38"
+dependencies = [
+ "cfg-if",
+ "indoc",
+ "libc",
+ "memoffset",
+ "parking_lot",
+ "pyo3-build-config",
+ "pyo3-ffi",
+ "pyo3-macros",
+ "unindent",
+]
+
+[[package]]
+name = "pyo3-build-config"
+version = "0.19.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "076c73d0bc438f7a4ef6fdd0c3bb4732149136abd952b110ac93e4edb13a6ba5"
+dependencies = [
+ "once_cell",
+ "target-lexicon",
+]
+
+[[package]]
+name = "pyo3-ffi"
+version = "0.19.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e53cee42e77ebe256066ba8aa77eff722b3bb91f3419177cf4cd0f304d3284d9"
+dependencies = [
+ "libc",
+ "pyo3-build-config",
+]
+
+[[package]]
+name = "pyo3-macros"
+version = "0.19.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dfeb4c99597e136528c6dd7d5e3de5434d1ceaf487436a3f03b2d56b6fc9efd1"
+dependencies = [
+ "proc-macro2",
+ "pyo3-macros-backend",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "pyo3-macros-backend"
+version = "0.19.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "947dc12175c254889edc0c02e399476c2f652b4b9ebd123aa655c224de259536"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -3739,6 +3965,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_arrays"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38636132857f68ec3d5f3eb121166d2af33cb55174c4d5ff645db6165cbef0fd"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.196"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3921,15 +4156,15 @@ version = "0.1.1"
 source = "git+https://github.com/privacy-scaling-explorations/snark-verifier?tag=v2024_01_31#946536fc01901db93a3e7cdb8a7359a7ef675b55"
 dependencies = [
  "ecc",
- "halo2_proofs",
- "halo2curves",
+ "halo2_proofs 0.3.0",
+ "halo2curves 0.6.1",
  "hex",
  "itertools 0.10.5",
  "lazy_static",
  "num-bigint",
  "num-integer",
  "num-traits",
- "poseidon",
+ "poseidon 0.2.0 (git+https://github.com/privacy-scaling-explorations/poseidon?tag=v2024_01_31)",
  "rand",
  "revm",
  "sha3 0.10.8",
@@ -4142,6 +4377,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
+name = "target-lexicon"
+version = "0.12.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1fc403891a21bcfb7c37834ba66a547a8f402146eba7265b5a6d88059c9ff2f"
+
+[[package]]
 name = "tempfile"
 version = "3.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4186,7 +4427,7 @@ dependencies = [
  "ethers-signers",
  "external-tracer",
  "glob",
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "handlebars",
  "hex",
  "log",
@@ -4558,6 +4799,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
 
 [[package]]
+name = "unindent"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1766d682d402817b5ac4490b3c3002d91dfa0d22812f341609f97b08757359c"
+
+[[package]]
 name = "untrusted"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4600,6 +4847,16 @@ checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 dependencies = [
  "getrandom",
  "serde",
+]
+
+[[package]]
+name = "uuid"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a183cf7feeba97b4dd1c0d46788634f6221d87fa961b305bed08c851829efcc0"
+dependencies = [
+ "atomic",
+ "getrandom",
 ]
 
 [[package]]
@@ -4998,6 +5255,7 @@ version = "0.1.0"
 dependencies = [
  "array-init",
  "bus-mapping",
+ "chiquito",
  "cli-table",
  "ctor",
  "ecc",
@@ -5010,7 +5268,7 @@ dependencies = [
  "getrandom",
  "halo2-base",
  "halo2-ecc",
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "hex",
  "integer",
  "itertools 0.10.5",
@@ -5063,8 +5321,3 @@ dependencies = [
  "cc",
  "pkg-config",
 ]
-
-[[patch.unused]]
-name = "halo2curves"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"

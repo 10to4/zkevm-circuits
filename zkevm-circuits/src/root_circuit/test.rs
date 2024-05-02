@@ -290,6 +290,7 @@ fn test_root_circuit_multiple_chunk() {
             max_evm_rows: 1 << 12,
             max_keccak_rows: 0,
             max_vertical_circuit_rows: 0,
+            max_blake2f_rows: 0,
         };
         let (k, circuits, instances, _) =
             SuperCircuit::<_>::build(block_1tx(), circuits_params, TEST_MOCK_RANDOMNESS.into())

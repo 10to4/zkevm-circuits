@@ -67,6 +67,10 @@ pub struct Block<F> {
     pub eth_block: eth_types::Block<eth_types::Transaction>,
     /// rw_table padding meta data
     pub rw_padding_meta: BTreeMap<usize, i32>,
+    /// blake2f inputs
+    pub blake2f_inputs: Vec<Vec<u8>>,
+    /// max blake2f rows
+    pub max_blake2f_rows: usize,
 }
 
 impl<F: Field> Block<F> {
@@ -352,6 +356,8 @@ pub fn block_convert<F: Field>(
         eth_block: block.eth_block.clone(),
         end_block: block.end_block.clone(),
         rw_padding_meta,
+        blake2f_inputs: block.blake2f_inputs.clone(),
+        max_blake2f_rows: 12 * block.blake2f_inputs.clone().len(), // todo
     };
     let public_data = public_data_convert(&block);
 

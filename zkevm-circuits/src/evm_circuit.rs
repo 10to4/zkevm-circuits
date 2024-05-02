@@ -697,6 +697,7 @@ mod evm_circuit_stats {
             max_evm_rows: 0,
             max_keccak_rows: 0,
             max_vertical_circuit_rows: 0,
+            max_blake2f_rows: 0,
         };
         let builder = BlockData::new_from_geth_data_with_params(block.clone(), circuits_params)
             .new_circuit_input_builder()
